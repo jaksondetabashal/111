@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Шпаргалка по билетам</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 800px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 150px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #result-container {
+            display: none; /* Скрыто по умолчанию */
+            margin-top: 20px;
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #2ecc71;
+            font-size: 14px;
+            padding: 5px 15px;
+        }
+        .copy-btn:hover {
+            background-color: #27ae60;
+        }
+        pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 0;
+            border: 1px solid #444;
+        }
+        code {
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Поиск кода по билету</h1>
+        <div class="search-box">
+            <input type="number" id="ticketInput" min="1" max="30" placeholder="Номер (1-30)">
+            <button onclick="getTicketCode()">Найти</button>
+        </div>
+
+        <div id="result-container">
+            <button class="copy-btn" id="copyBtn" onclick="copyCode()">Копировать</button>
+            <pre><code id="codeOutput"></code></pre>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // БАЗА ДАННЫХ БИЛЕТОВ
+        // Вставляй свой код строго между обратными кавычками ` `
+        // ==========================================
+        const ticketsData = {
+            1: `CREATE DATABASE Ticket1DB;
+GO
+USE Ticket1DB;
+GO
+
+CREATE TABLE Банк (
+    Код_банка INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(100) NOT NULL,
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Трансферт (
+    Номер_контракта INT PRIMARY KEY,
+    Счет_предприятия NVARCHAR(50),
+    Счет_производства NVARCHAR(50),
+    Сумма DECIMAL(15,2),
+    Код_банка INT FOREIGN KEY REFERENCES Банк(Код_банка)
+);
+
+CREATE TABLE Заказы (
+    Код_заказа INT IDENTITY(1,1) PRIMARY KEY,
+    Название_предприятия NVARCHAR(100),
+    Адрес NVARCHAR(200),
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Производство (
+    Код_производства INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(100),
+    Адрес NVARCHAR(200),
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Продукт (
+    Код INT IDENTITY(1,1) PRIMARY KEY,
+    Вид_продукции NVARCHAR(100),
+    Вес DECIMAL(10,3),
+    Наименование NVARCHAR(100) NOT NULL,
+    Стоимость DECIMAL(15,2),
+    Количество INT,
+    Дата_выпуска DATE,
+    Срок_годности NVARCHAR(50),
+    Температура_хранения NVARCHAR(50),
+    Код_производства INT FOREIGN KEY REFERENCES Производство(Код_производства),
+    Логотип NVARCHAR(255)
+);
+
+CREATE TABLE Контракт (
+    Код_контракта INT IDENTITY(1,1) PRIMARY KEY,
+    Код_заказа INT FOREIGN KEY REFERENCES Заказы(Код_заказа),
+    Код_продукта INT FOREIGN KEY REFERENCES Продукт(Код),
+    Количество_продукта INT,
+    Затраты_на_транспорт DECIMAL(15,2),
+    Цена DECIMAL(15,2),
+    Дата_заключения_контракта DATE,
+    Срок_доставки INT,
+    Выполнение NVARCHAR(50)
+);
+GO`,
+            
+            2: `CREATE DATABASE Ticket2DB;
+GO
+USE Ticket2DB;
+GO
+
+CREATE TABLE readers (
+    code_reader INT IDENTITY(1,1) PRIMARY KEY,
+    full_name NVARCHAR(150) NOT NULL,
+    phone NVARCHAR(20),
+    address NVARCHAR(255)
+);
+
+CREATE TABLE publishing_houses (
+    code_publish INT IDENTITY(1,1) PRIMARY KEY,
+    publish NVARCHAR(100) NOT NULL,
+    city NVARCHAR(100)
+);
+
+CREATE TABLE themes (
+    code_theme INT IDENTITY(1,1) PRIMARY KEY,
+    topic_name NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE lending_books (
+    code_lending_book INT IDENTITY(1,1) PRIMARY KEY,
+    date_order DATE,
+    code_reader INT FOREIGN KEY REFERENCES readers(code_reader)
+);
+
+CREATE TABLE books (
+    code_book INT IDENTITY(1,1) PRIMARY KEY,
+    author NVARCHAR(150),
+    title_book NVARCHAR(150) NOT NULL,
+    code_publish INT FOREIGN KEY REFERENCES publishing_houses(code_publish),
+    code_lending_book INT FOREIGN KEY REFERENCES lending_books(code_lending_book),
+    pages INT,
+    date_of_publishing DATE,
+    cost DECIMAL(10,2),
+    amount INT
+);
+
+CREATE TABLE books_themes (
+    code_book INT FOREIGN KEY REFERENCES books(code_book),
+    code_theme INT FOREIGN KEY REFERENCES themes(code_theme),
+    PRIMARY KEY (code_book, code_theme)
+);
+GO`,
+
+
+            3: `CREATE DATABASE Ticket3DB;
+GO
+USE Ticket3DB;
+GO
+
+CREATE TABLE Тип_товара (
+    Код_типа INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование NVARCHAR(100) NOT NULL,
+    Ответственный NVARCHAR(150)
+);
+
+CREATE TABLE Склады (
+    Код_склада INT IDENTITY(1,1) PRIMARY KEY,
+    Название_склада NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Поставщики (
+    Код_поставщика INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(100) NOT NULL,
+    Адрес NVARCHAR(255),
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Товары (
+    Номер_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Код_типа INT FOREIGN KEY REFERENCES Тип_товара(Код_типа),
+    Код_склада INT FOREIGN KEY REFERENCES Склады(Код_склада),
+    Название NVARCHAR(150) NOT NULL,
+    Цена DECIMAL(15,2),
+    Склад NVARCHAR(100),
+    Тип NVARCHAR(100),
+    Дата_поставки DATE
+);
+
+CREATE TABLE Расчет (
+    Номер INT IDENTITY(1,1) PRIMARY KEY,
+    Код_поставщика INT FOREIGN KEY REFERENCES Поставщики(Код_поставщика),
+    Номер_товара INT FOREIGN KEY REFERENCES Товары(Номер_товара),
+    Код_типа INT FOREIGN KEY REFERENCES Тип_товара(Код_типа),
+    Код_склада INT FOREIGN KEY REFERENCES Склады(Код_склада),
+    Поставщик NVARCHAR(100),
+    Количество INT,
+    Продукция NVARCHAR(150)
+);
+GO`,
+
+
+            4: `CREATE DATABASE Ticket4DB;
+GO
+USE Ticket4DB;
+GO
+
+CREATE TABLE Предмет (
+    КодПредмета INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Класс (
+    КодКласса INT IDENTITY(1,1) PRIMARY KEY,
+    НомерКласса NVARCHAR(10) NOT NULL
+);
+
+CREATE TABLE Учитель (
+    КодУчителя INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL,
+    КодПредмета INT FOREIGN KEY REFERENCES Предмет(КодПредмета),
+    Квалификация NVARCHAR(100),
+    КлассноеРуководство NVARCHAR(10)
+);
+
+CREATE TABLE Ученик (
+    КодУченика INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL,
+    КодКласса INT FOREIGN KEY REFERENCES Класс(КодКласса)
+);
+
+CREATE TABLE СрБаллПоПредмету (
+    Код INT IDENTITY(1,1) PRIMARY KEY,
+    КодПредмета INT FOREIGN KEY REFERENCES Предмет(КодПредмета),
+    КодКласса INT FOREIGN KEY REFERENCES Класс(КодКласса),
+    СрБалл DECIMAL(3,2),
+    КодУчителя INT FOREIGN KEY REFERENCES Учитель(КодУчителя)
+);
+GO`,
+
+
+            5: `CREATE DATABASE Ticket5DB;
+GO
+USE Ticket5DB;
+GO
+
+CREATE TABLE Кабинет (
+    Номер_кабинета INT PRIMARY KEY,
+    Назначение NVARCHAR(100)
+);
+
+CREATE TABLE Карта_больного (
+    Номер_карты INT IDENTITY(1,1) PRIMARY KEY,
+    Симптомы NVARCHAR(MAX),
+    Диагноз NVARCHAR(255),
+    Лекарство NVARCHAR(255)
+);
+
+CREATE TABLE Пациент (
+    Номер_полиса NVARCHAR(50) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL,
+    Адрес NVARCHAR(255),
+    Год_рождения INT,
+    Номер_карты INT FOREIGN KEY REFERENCES Карта_больного(Номер_карты)
+);
+
+CREATE TABLE Врач (
+    ID_врача INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL,
+    Номер_кабинета INT FOREIGN KEY REFERENCES Кабинет(Номер_кабинета),
+    Часы_приёма_с TIME,
+    Часы_приема_до TIME
+);
+
+CREATE TABLE Прием (
+    ID_записи INT IDENTITY(1,1) PRIMARY KEY,
+    ID_врача INT FOREIGN KEY REFERENCES Врач(ID_врача),
+    Номер_кабинета INT FOREIGN KEY REFERENCES Кабинет(Номер_кабинета),
+    Дата_и_время_приема DATETIME,
+    Номер_полиса NVARCHAR(50) FOREIGN KEY REFERENCES Пациент(Номер_полиса)
+);
+GO`,
+
+
+            6: `CREATE DATABASE Ticket6DB;
+GO
+USE Ticket6DB;
+GO
+
+CREATE TABLE Товары (
+    Код_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(150) NOT NULL,
+    Цена DECIMAL(15,2),
+    Единица_измерения NVARCHAR(30)
+);
+
+CREATE TABLE Клиенты (
+    Код_клиента INT IDENTITY(1,1) PRIMARY KEY,
+    Фамилия NVARCHAR(50) NOT NULL,
+    Имя NVARCHAR(50) NOT NULL,
+    Отчество NVARCHAR(50),
+    Адрес NVARCHAR(255),
+    Телефон NVARCHAR(20),
+    e-mail NVARCHAR(100)
+);
+
+CREATE TABLE Продажи (
+    Код_продажи INT IDENTITY(1,1) PRIMARY KEY,
+    Код_товара INT FOREIGN KEY REFERENCES Товары(Код_товара),
+    Код_клиента INT FOREIGN KEY REFERENCES Клиенты(Код_клиента),
+    Дата_продажи DATE,
+    Дата_доставки DATE,
+    Количество INT
+);
+GO`,
+
+
+            7: `CREATE DATABASE Ticket7DB;
+GO
+USE Ticket7DB;
+GO
+
+CREATE TABLE Виды_блюд (
+    Код_вида INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_вида NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Блюда (
+    Код_блюда INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_блюда NVARCHAR(150) NOT NULL,
+    Состав_блюда NVARCHAR(MAX),
+    Стоимость DECIMAL(10,2),
+    Вес_блюда INT,
+    Калорийность INT,
+    Время_приготовления INT,
+    Код_вида INT FOREIGN KEY REFERENCES Виды_блюд(Код_вида)
+);
+
+CREATE TABLE Должности (
+    Код_должности INT IDENTITY(1,1) PRIMARY KEY,
+    Название_должности NVARCHAR(100) NOT NULL,
+    Оклад DECIMAL(15,2),
+    Функции NVARCHAR(MAX)
+);
+
+CREATE TABLE Персонал (
+    Код_работника INT IDENTITY(1,1) PRIMARY KEY,
+    Фамилия NVARCHAR(50) NOT NULL,
+    Имя NVARCHAR(50) NOT NULL,
+    Отчество NVARCHAR(50),
+    Дата_рождения DATE,
+    Номер_серия_паспорта NVARCHAR(30),
+    Адрес NVARCHAR(255),
+    Телефон NVARCHAR(20),
+    Код_должности INT FOREIGN KEY REFERENCES Должности(Код_должности)
+);
+
+CREATE TABLE Постоянные_клиенты (
+    Код_клиента INT IDENTITY(1,1) PRIMARY KEY,
+    Фамилия NVARCHAR(50) NOT NULL,
+    Имя NVARCHAR(50) NOT NULL,
+    Отчество NVARCHAR(50),
+    Контактный_телефон NVARCHAR(20),
+    Процент_скидки DECIMAL(5,2)
+);
+
+CREATE TABLE Заказы (
+    Код_заказа INT IDENTITY(1,1) PRIMARY KEY,
+    Количество INT,
+    Код_работника INT FOREIGN KEY REFERENCES Персонал(Код_работника),
+    Код_блюда INT FOREIGN KEY REFERENCES Блюда(Код_блюда),
+    Код_клиента INT FOREIGN KEY REFERENCES Постоянные_клиенты(Код_клиента)
+);
+GO`,
+
+
+            8: `CREATE DATABASE Ticket8DB;
+GO
+USE Ticket8DB;
+GO
+
+CREATE TABLE Покупатель (
+    Код_покупателя INT IDENTITY(1,1) PRIMARY KEY,
+    Покупатель NVARCHAR(150) NOT NULL,
+    Тел_покупателя NVARCHAR(20),
+    Моб_тел_покупателя NVARCHAR(20),
+    Тип_покупателя NVARCHAR(50)
+);
+
+CREATE TABLE Поставщик (
+    Код_поставщика INT IDENTITY(1,1) PRIMARY KEY,
+    Поставщик NVARCHAR(150) NOT NULL,
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Полка (
+    Номер_полки INT PRIMARY KEY,
+    Объём_полки DECIMAL(10,2)
+);
+
+CREATE TABLE Товар (
+    Код_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_товарa NVARCHAR(150) NOT NULL,
+    Тип_товара NVARCHAR(100),
+    Минимальный_запас INT,
+    Описание NVARCHAR(MAX),
+    Единица_измерения NVARCHAR(30),
+    Партия NVARCHAR(50),
+    Дата_поставки DATE,
+    Наличие BIT,
+    Количество INT,
+    Цена_поставки DECIMAL(15,2)
+);
+
+CREATE TABLE Заказ (
+    Номер_заказа INT IDENTITY(1,1) PRIMARY KEY,
+    Код_покупателя INT FOREIGN KEY REFERENCES Покупатель(Код_покупателя),
+    Дата_заказа DATE,
+    Оплачено BIT DEFAULT 0,
+    Форма_оплаты NVARCHAR(50),
+    Наименование NVARCHAR(150),
+    Количество INT
+);
+
+-- Промежуточные таблицы для связей многие-ко-многим (из схемы):
+CREATE TABLE Поставки_Товаров (
+    Код_поставщика INT FOREIGN KEY REFERENCES Поставщик(Код_поставщика),
+    Код_товара INT FOREIGN KEY REFERENCES Товар(Код_товара),
+    PRIMARY KEY (Код_поставщика, Код_товара)
+);
+
+CREATE TABLE Хранение_Товаров (
+    Код_товара INT FOREIGN KEY REFERENCES Товар(Код_товара),
+    Номер_полки INT FOREIGN KEY REFERENCES Полка(Номер_полки),
+    PRIMARY KEY (Код_товара, Номер_полки)
+);
+
+CREATE TABLE Состав_Заказа (
+    Номер_заказа INT FOREIGN KEY REFERENCES Заказ(Номер_заказа),
+    Код_товара INT FOREIGN KEY REFERENCES Товар(Код_товара),
+    PRIMARY KEY (Номер_заказа, Код_товара)
+);
+GO`,
+
+
+            9: `CREATE DATABASE Ticket9DB;
+GO
+USE Ticket9DB;
+GO
+
+CREATE TABLE Клиенты (
+    Код_клиента INT IDENTITY(1,1) PRIMARY KEY,
+    Клиент NVARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Грузы (
+    Код_груза INT IDENTITY(1,1) PRIMARY KEY,
+    Груз NVARCHAR(150) NOT NULL,
+    Вес_т DECIMAL(10,3)
+);
+
+CREATE TABLE Грузовики (
+    Код_грузовика INT IDENTITY(1,1) PRIMARY KEY,
+    Номер_грузовика NVARCHAR(20) NOT NULL,
+    Грузоподъемность_т DECIMAL(10,2),
+    Водитель NVARCHAR(150)
+);
+
+CREATE TABLE Города (
+    Код_города INT IDENTITY(1,1) PRIMARY KEY,
+    Город NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Перевозки (
+    Код_перевозки INT IDENTITY(1,1) PRIMARY KEY,
+    Код_клиента INT FOREIGN KEY REFERENCES Клиенты(Код_клиента),
+    Клиент NVARCHAR(150),
+    Груз NVARCHAR(150),
+    Код_груза INT FOREIGN KEY REFERENCES Грузы(Код_груза),
+    Код_грузовика INT FOREIGN KEY REFERENCES Грузовики(Код_грузовика),
+    Грузовик NVARCHAR(50),
+    Код_города INT FOREIGN KEY REFERENCES Города(Код_города),
+    Город NVARCHAR(100),
+    Дата_поставки DATE
+);
+GO`,
+
+
+            10: `CREATE DATABASE Ticket10DB;
+GO
+USE Ticket10DB;
+GO
+
+CREATE TABLE Студент (
+    Номер INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL,
+    Пароль NVARCHAR(50),
+    Возраст INT,
+    Пол NVARCHAR(10),
+    Специальность NVARCHAR(150),
+    Характеристика NVARCHAR(MAX),
+    E_mail NVARCHAR(100),
+    Специализация NVARCHAR(150),
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Иностранный_язык (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Номер INT FOREIGN KEY REFERENCES Студент(Номер),
+    Язык NVARCHAR(50) NOT NULL,
+    Уровень_владения NVARCHAR(50)
+);
+
+CREATE TABLE Экспертная_оценка (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Номер INT FOREIGN KEY REFERENCES Студент(Номер),
+    Дисциплина NVARCHAR(100) NOT NULL,
+    ФИО_преподавателя NVARCHAR(150),
+    Оценка INT
+);
+
+CREATE TABLE Оценки_по_экзаменам (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Номер INT FOREIGN KEY REFERENCES Студент(Номер),
+    Предмет NVARCHAR(100) NOT NULL,
+    Оценка INT
+);
+
+CREATE TABLE Тест (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Номер INT FOREIGN KEY REFERENCES Студент(Номер),
+    Название NVARCHAR(150) NOT NULL,
+    Описание NVARCHAR(MAX),
+    Оценка INT
+);
+
+CREATE TABLE Опыт_работы (
+    ID INT IDENTITY(1,1) PRIMARY KEY,
+    Номер INT FOREIGN KEY REFERENCES Студент(Номер),
+    Специальность NVARCHAR(150),
+    Опыт INT, -- в месяцах или годах
+    Место_работы NVARCHAR(255)
+);
+GO`,
+
+
+            11: `CREATE DATABASE Билет11_Магазин;
+GO
+USE Билет11_Магазин;
+GO
+
+CREATE TABLE Товар (
+    Код_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_товара NVARCHAR(150) NOT NULL,
+    Описание_товара NVARCHAR(MAX),
+    Цена DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE Сотрудник (
+    Код_сотрудника INT IDENTITY(1,1) PRIMARY KEY,
+    Фамилия NVARCHAR(50) NOT NULL,
+    Имя NVARCHAR(50) NOT NULL,
+    Отчество NVARCHAR(50),
+    Дата_рождения DATE,
+    Телефон NVARCHAR(20),
+    Должность NVARCHAR(100),
+    Оклад DECIMAL(15,2)
+);
+
+CREATE TABLE Клиент (
+    Код_клиента INT IDENTITY(1,1) PRIMARY KEY,
+    Фамилия NVARCHAR(50) NOT NULL,
+    Имя NVARCHAR(50) NOT NULL,
+    Отчество NVARCHAR(50),
+    Дата_рождения DATE,
+    Город NVARCHAR(100),
+    Адрес NVARCHAR(250),
+    Телефон NVARCHAR(20),
+    E_mail NVARCHAR(100)
+);
+
+CREATE TABLE Доставка (
+    Код_доставки INT IDENTITY(1,1) PRIMARY KEY,
+    Тип_доставки NVARCHAR(100) NOT NULL,
+    Срок_доставки NVARCHAR(50),
+    Стоимость DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE Заказ (
+    Код_заказа INT IDENTITY(1,1) PRIMARY KEY,
+    Код_покупателя INT REFERENCES Клиент(Код_клиента),
+    Код_сотрудника INT REFERENCES Сотрудник(Код_сотрудника),
+    Тип_оплаты NVARCHAR(50),
+    Код_доставки INT REFERENCES Доставка(Код_доставки),
+    Дата_заказа DATE NOT NULL,
+    Стоимость_заказа DECIMAL(15,2),
+    Статус_заказа NVARCHAR(50)
+);
+
+CREATE TABLE Товар_Заказ (
+    Код_заказанного_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Код_заказа INT REFERENCES Заказ(Код_заказа) ON DELETE CASCADE,
+    Код_товара INT REFERENCES Товар(Код_товара),
+    Количество INT NOT NULL CHECK (Количество > 0),
+    Стоимость DECIMAL(15,2)
+);
+GO`,
+
+
+            12: `CREATE DATABASE Ticket12_AutoService;
+GO
+USE Ticket12_AutoService;
+GO
+
+CREATE TABLE LaborWorks (
+    WorkID INT IDENTITY(1,1) PRIMARY KEY,
+    WorkName NVARCHAR(150) NOT NULL,
+    Cost DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE Clients (
+    ClientID INT IDENTITY(1,1) PRIMARY KEY,
+    CarMake NVARCHAR(50),
+    ClientName NVARCHAR(100) NOT NULL,
+    City NVARCHAR(50),
+    Address NVARCHAR(200),
+    Phone NVARCHAR(20),
+    Email NVARCHAR(100),
+    IsPhysicalOrLegal NVARCHAR(20)
+);
+
+CREATE TABLE RegistrationData (
+    ClientID INT PRIMARY KEY REFERENCES Clients(ClientID) ON DELETE CASCADE,
+    VIN NVARCHAR(50) NOT NULL UNIQUE,
+    CarMake NVARCHAR(50),
+    CarModel NVARCHAR(50),
+    EngineType NVARCHAR(50),
+    YearOfManufacture INT,
+    LicensePlate NVARCHAR(20),
+    Mileage INT,
+    Color NVARCHAR(30),
+    RegistrationDate DATE
+);
+
+CREATE TABLE SpareParts (
+    PartID INT IDENTITY(1,1) PRIMARY KEY,
+    PartName NVARCHAR(150) NOT NULL,
+    CarMake NVARCHAR(50),
+    CarModel NVARCHAR(50),
+    EngineType NVARCHAR(50),
+    Manufacturer NVARCHAR(100),
+    Quantity INT NOT NULL,
+    Price DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE RobotOrders (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    ClientID INT REFERENCES Clients(ClientID),
+    WorkID INT REFERENCES LaborWorks(WorkID)
+);
+
+CREATE TABLE SparePartsOrders (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    ClientID INT REFERENCES Clients(ClientID),
+    PartID INT REFERENCES SpareParts(PartID)
+);
+GO`,
+
+
+            13: `CREATE DATABASE Билет13_Библиотека;
+GO
+USE Билет13_Библиотека;
+GO
+
+CREATE TABLE Абоненты (
+    Код_абонента INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Сотрудники (
+    Код_сотрудника INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Авторы (
+    Код_автора INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО NVARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Жанры (
+    Код_жанра INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Книги (
+    Код_книги INT IDENTITY(1,1) PRIMARY KEY,
+    Код_автора INT REFERENCES Авторы(Код_автора),
+    Код_жанра INT REFERENCES Жанры(Код_жанра),
+    Количество INT NOT NULL DEFAULT 0,
+    Наименование NVARCHAR(250) NOT NULL
+);
+
+CREATE TABLE Выдача_книг (
+    Код_выдачи INT IDENTITY(1,1) PRIMARY KEY,
+    Код_абонента INT REFERENCES Абоненты(Код_абонента),
+    Код_книги INT REFERENCES Книги(Код_книги),
+    Код_сотрудника INT REFERENCES Сотрудники(Код_сотрудника),
+    Дата_выдачи DATE NOT NULL,
+    Дата_требования DATE,
+    Дата_фактическая DATE
+);
+GO`,
+
+
+            14: `CREATE DATABASE Ticket14_Hospital;
+GO
+USE Ticket14_Hospital;
+GO
+
+CREATE TABLE Doctors (
+    DoctorFullName NVARCHAR(150) PRIMARY KEY,
+    Specialty NVARCHAR(100) NOT NULL,
+    Category NVARCHAR(50)
+);
+
+CREATE TABLE Diagnoses (
+    DiagnosisCode INT IDENTITY(1,1) PRIMARY KEY,
+    DiagnosisName NVARCHAR(200) NOT NULL
+);
+
+CREATE TABLE Patients (
+    MedicalCardNumber INT IDENTITY(1,1) PRIMARY KEY,
+    PatientFullName NVARCHAR(150) NOT NULL,
+    BirthDate DATE,
+    Address NVARCHAR(250),
+    Gender NVARCHAR(10),
+    Discount DECIMAL(5,2) DEFAULT 0,
+    DiagnosisCode INT REFERENCES Diagnoses(DiagnosisCode)
+);
+
+CREATE TABLE Appointments (
+    TicketNumber INT IDENTITY(1,1) PRIMARY KEY,
+    VisitDate DATE NOT NULL,
+    PurposeOfVisit NVARCHAR(200),
+    Cost DECIMAL(15,2),
+    DoctorFullName NVARCHAR(150) REFERENCES Doctors(DoctorFullName),
+    MedicalCardNumber INT REFERENCES Patients(MedicalCardNumber) ON DELETE CASCADE
+);
+GO`,
+
+
+            15: `CREATE DATABASE Билет15_ИнтернетМагазин;
+GO
+USE Билет15_ИнтернетМагазин;
+GO
+
+CREATE TABLE Товары (
+    КодТовара INT IDENTITY(1,1) PRIMARY KEY,
+    Марка NVARCHAR(100),
+    КодПоставщика INT,
+    КодТипа INT,
+    ЕдиницаИзмерения NVARCHAR(30),
+    Цена DECIMAL(15,2) NOT NULL,
+    Ожидается INT,
+    МинимальныйЗапас INT
+);
+
+CREATE TABLE Сотрудники (
+    КодСотрудника INT IDENTITY(1,1) PRIMARY KEY,
+    Фамилия NVARCHAR(50) NOT NULL,
+    Имя NVARCHAR(50) NOT NULL,
+    Должность NVARCHAR(100),
+    Обращение NVARCHAR(20),
+    ДатаРождения DATE,
+    ДатаНайма DATE,
+    Адрес NVARCHAR(200),
+    Город NVARCHAR(50),
+    Область NVARCHAR(50),
+    Индекс NVARCHAR(20),
+    Страна NVARCHAR(50),
+    ДомашнийТелефон NVARCHAR(20),
+    Добавочный NVARCHAR(10),
+    Фотография NVARCHAR(250),
+    Примечания NVARCHAR(MAX),
+    Подчиняется INT REFERENCES Сотрудники(КодСотрудника)
+);
+
+CREATE TABLE Клиенты (
+    КодКлиента INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(150) NOT NULL,
+    ОбращатьсяК NVARCHAR(100),
+    Должность NVARCHAR(100),
+    Адрес NVARCHAR(200),
+    Город NVARCHAR(50),
+    Область NVARCHAR(50),
+    Индекс NVARCHAR(20),
+    Страна NVARCHAR(50),
+    Телефон NVARCHAR(20),
+    Факс NVARCHAR(20)
+);
+
+CREATE TABLE Доставка (
+    КодДоставки INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(100) NOT NULL,
+    Телефон NVARCHAR(20)
+);
+
+CREATE TABLE Заказы (
+    КодЗаказа INT IDENTITY(1,1) PRIMARY KEY,
+    КодКлиента INT REFERENCES Клиенты(КодКлиента),
+    КодСотрудника INT REFERENCES Сотрудники(КодСотрудника),
+    ДатаРазмещения DATE,
+    ДатаНазначения DATE,
+    ДатаИсполнения DATE,
+    Доставка INT REFERENCES Доставка(КодДоставки),
+    СтоимостьДоставки DECIMAL(15,2),
+    НазваниеПолучателя NVARCHAR(150),
+    АдресПолучателя NVARCHAR(200),
+    ГородПолучателя NVARCHAR(50),
+    ОбластьПолучателя NVARCHAR(50),
+    ИндексПолучателя NVARCHAR(20),
+    СтранаПолучателя NVARCHAR(50)
+);
+
+CREATE TABLE Корзина_Покупателя (
+    КодЗаказа INT REFERENCES Заказы(КодЗаказа) ON DELETE CASCADE,
+    КодТовара INT REFERENCES Товары(КодТовара),
+    Цена DECIMAL(15,2) NOT NULL,
+    Количество INT NOT NULL CHECK (Количество > 0),
+    Скидка DECIMAL(5,2) DEFAULT 0,
+    PRIMARY KEY (КодЗаказа, КодТовара)
+);
+GO`,
+
+
+            16: `CREATE DATABASE Ticket16_GoodsSupply;
+GO
+USE Ticket16_GoodsSupply;
+GO
+
+CREATE TABLE Products (
+    ProductID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductName NVARCHAR(150) NOT NULL,
+    ProductPrice DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE SupplyOrders (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerName NVARCHAR(150) NOT NULL,
+    CustomerAddress NVARCHAR(250),
+    Phone NVARCHAR(20),
+    ContractNumber NVARCHAR(50),
+    ContractDate DATE,
+    ProductName NVARCHAR(150),
+    PlannedSupplyQuantity INT NOT NULL
+);
+
+CREATE TABLE ActualShipments (
+    ShipmentID INT IDENTITY(1,1) PRIMARY KEY,
+    OrderID INT REFERENCES SupplyOrders(OrderID) ON DELETE CASCADE,
+    ShipmentDate DATE NOT NULL,
+    ShippedQuantity INT NOT NULL
+);
+GO`,
+
+
+            17: `CREATE DATABASE Билет17_Фабрика;
+GO
+USE Билет17_Фабрика;
+GO
+
+CREATE TABLE Виды_Товара (
+    Код_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_товара NVARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Модели_Одежды (
+    Код_модели INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_модели NVARCHAR(150) NOT NULL,
+    Код_товара INT REFERENCES Виды_Товара(Код_товара),
+    Цена_модели DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE Поступления_На_Склад (
+    Код_поступления INT IDENTITY(1,1) PRIMARY KEY,
+    Код_модели INT REFERENCES Модели_Одежды(Код_модели) ON DELETE CASCADE,
+    Дата_поступления DATE NOT NULL,
+    Количество_шт INT NOT NULL CHECK (Количество_шт > 0),
+    Кто_принял_товар NVARCHAR(100) NOT NULL
+);
+GO`,
+
+
+            18: `CREATE DATABASE Ticket18_TradeCompany;
+GO
+USE Ticket18_TradeCompany;
+GO
+
+CREATE TABLE Departments (
+    DepartmentID INT IDENTITY(1,1) PRIMARY KEY,
+    DepartmentName NVARCHAR(100) NOT NULL,
+    ManagerFullName NVARCHAR(150),
+    Phone NVARCHAR(20),
+    DailySalesVolume DECIMAL(15,2)
+);
+
+CREATE TABLE Products (
+    ProductSKU NVARCHAR(50) PRIMARY KEY,
+    ProductName NVARCHAR(150) NOT NULL,
+    UnitOfMeasure NVARCHAR(30),
+    RetailPrice DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE Sales (
+    SaleID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductSKU NVARCHAR(50) REFERENCES Products(ProductSKU),
+    SaleDate DATE NOT NULL,
+    QuantitySold INT NOT NULL CHECK (QuantitySold > 0)
+);
+GO`,
+
+
+            19: `CREATE DATABASE Билет19_Подписки;
+GO
+USE Билет19_Подписки;
+GO
+
+CREATE TABLE Издания (
+    Индекс_издания NVARCHAR(50) PRIMARY KEY,
+    Вид_издания NVARCHAR(50) NOT NULL, -- газета, журнал
+    Название_издания NVARCHAR(200) NOT NULL,
+    Стоимость_подписки_на_1_месяц DECIMAL(15,2) NOT NULL
+);
+
+CREATE TABLE Получатели (
+    Код_получателя INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_получателя NVARCHAR(150) NOT NULL,
+    Адрес_получателя NVARCHAR(300) NOT NULL -- улица, дом, квартира
+);
+
+CREATE TABLE Подписки (
+    Код_подписки INT IDENTITY(1,1) PRIMARY KEY,
+    Код_получателя INT REFERENCES Получатели(Код_получателя),
+    Индекс_издания NVARCHAR(50) REFERENCES Издания(Индекс_издания),
+    Срок_подписки_в_месяцах INT NOT NULL CHECK (Срок_подписки_в_месяцах IN (1, 3, 6)),
+    Месяц_начала_доставки NVARCHAR(20) NOT NULL,
+    Год_начало_доставки INT NOT NULL
+);
+GO`,
+
+
+            20: `CREATE DATABASE Ticket20_CurrencyExchange;
+GO
+USE Ticket20_CurrencyExchange;
+GO
+
+CREATE TABLE Customers (
+    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerFullName NVARCHAR(150) NOT NULL,
+    PassportNumber NVARCHAR(50) NOT NULL
+);
+
+CREATE TABLE Cashiers (
+    CashierID INT IDENTITY(1,1) PRIMARY KEY,
+    CashierFullName NVARCHAR(150) NOT NULL
+);
+
+CREATE TABLE Currencies (
+    CurrencyID INT IDENTITY(1,1) PRIMARY KEY,
+    SoldCurrencyCode NVARCHAR(10) NOT NULL,
+    BoughtCurrencyCode NVARCHAR(10) NOT NULL,
+    CurrencyName NVARCHAR(100) NOT NULL,
+    SellingRate DECIMAL(10,4) NOT NULL,
+    BuyingRate DECIMAL(10,4) NOT NULL
+);
+
+CREATE TABLE Transactions (
+    TransactionID INT IDENTITY(1,1) PRIMARY KEY,
+    SoldCurrencyCode NVARCHAR(10),
+    BoughtCurrencyCode NVARCHAR(10),
+    CashierID INT REFERENCES Cashiers(CashierID),
+    CustomerID INT REFERENCES Customers(CustomerID),
+    TransactionDate DATE NOT NULL,
+    TransactionTime TIME NOT NULL,
+    AmountSold DECIMAL(15,2) NOT NULL,
+    AmountBought DECIMAL(15,2) NOT NULL
+);
+GO`,
+
+
+            21: `CREATE DATABASE LibrarySubscriptionDB;
+GO
+USE LibrarySubscriptionDB;
+GO
+
+-- 1. Таматические каталоги
+CREATE TABLE Тематические_каталоги (
+    Код_темы INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_темы NVARCHAR(150) NOT NULL
+);
+
+-- 2. Книги
+CREATE TABLE Книги (
+    Шифр_книги INT IDENTITY(1,1) PRIMARY KEY,
+    Название NVARCHAR(255) NOT NULL,
+    Первый_автор NVARCHAR(100) NOT NULL,
+    Издательство NVARCHAR(100),
+    Место_издания NVARCHAR(100),
+    Год_издания INT,
+    Количество_страниц INT,
+    Цена MONEY
+);
+
+-- 3. Экземпляры (Связующая таблица с учетом дат и тем)
+CREATE TABLE Экземпляры (
+    Инвентарный_номер INT IDENTITY(1,1) PRIMARY KEY,
+    Шифр_книги INT FOREIGN KEY REFERENCES Книги(Шифр_книги) ON DELETE CASCADE,
+    Количество_экземпляров INT NOT NULL,
+    Дата_выдачи DATE,
+    Дата_возврата DATE,
+    Код_темы INT FOREIGN KEY REFERENCES Тематические_каталоги(Код_темы) ON DELETE SET NULL
+);
+
+-- 4. Читатели
+CREATE TABLE Читатели (
+    Номер_читательского_билета INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_читателя NVARCHAR(150) NOT NULL,
+    Дата_рождения DATE,
+    Телефон NVARCHAR(20)
+);
+GO`,
+
+
+            22: `CREATE DATABASE RetailTradeDB;
+GO
+USE RetailTradeDB;
+GO
+
+-- 1. Suppliers (Поставщики)
+CREATE TABLE Suppliers (
+    SupplierID INT IDENTITY(1,1) PRIMARY KEY,
+    SupplierName NVARCHAR(150) NOT NULL,
+    Address NVARCHAR(255),
+    Phone NVARCHAR(20),
+    ContactPerson NVARCHAR(100)
+);
+
+-- 2. Products (Товары)
+CREATE TABLE Products (
+    ProductID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductName NVARCHAR(150) NOT NULL,
+    ArrivalDate DATE NOT NULL,
+    Quantity INT NOT NULL,
+    PurchasePrice MONEY NOT NULL
+);
+
+-- 3. Sales (Продажи)
+CREATE TABLE Sales (
+    SaleID INT IDENTITY(1,1) PRIMARY KEY,
+    ProductID INT FOREIGN KEY REFERENCES Products(ProductID) ON DELETE CASCADE,
+    SaleDate DATE NOT NULL,
+    QuantitySold INT NOT NULL,
+    RetailPrice MONEY NOT NULL
+);
+GO`,
+
+
+            23: `CREATE DATABASE AuditDB;
+GO
+USE AuditDB;
+GO
+
+-- 1. Категории сотрудников
+CREATE TABLE Категории_сотрудников (
+    Категория INT PRIMARY KEY, -- 1-я, 2-я, 3-я
+    Ставка_за_1_час MONEY NOT NULL
+);
+
+-- 2. Сотрудники аудиторской фирмы
+CREATE TABLE Сотрудники (
+    Код_сотрудника INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_сотрудника NVARCHAR(150) NOT NULL,
+    Номер_паспорта NVARCHAR(50) NOT NULL,
+    Дата_рождения DATE,
+    Рабочий_телефон NVARCHAR(20),
+    Категория INT FOREIGN KEY REFERENCES Категории_сотрудников(Категория) ON DELETE SET NULL
+);
+
+-- 3. Выполненная работа на предприятиях
+CREATE TABLE Выполненная_работа (
+    Код_работы INT IDENTITY(1,1) PRIMARY KEY,
+    Название_предприятия NVARCHAR(150) NOT NULL,
+    Код_сотрудника INT FOREIGN KEY REFERENCES Сотрудники(Код_сотрудника) ON DELETE CASCADE,
+    Дата_выполнения_работы DATE NOT NULL,
+    Количество_отработанных_часов INT NOT NULL
+);
+GO`,
+
+
+            24: `CREATE DATABASE TravelAgencyDB;
+GO
+USE TravelAgencyDB;
+GO
+
+-- 1. Countries (Страны)
+CREATE TABLE Countries (
+    CountryCode INT IDENTITY(1,1) PRIMARY KEY,
+    CountryName NVARCHAR(100) NOT NULL,
+    VisaCost MONEY NOT NULL
+);
+
+-- 2. Routes (Маршруты)
+CREATE TABLE Routes (
+    RouteCode INT IDENTITY(1,1) PRIMARY KEY,
+    CountryCode INT FOREIGN KEY REFERENCES Countries(CountryCode) ON DELETE CASCADE,
+    RouteName NVARCHAR(150) NOT NULL
+);
+
+-- 3. Sales (Продажи)
+CREATE TABLE Sales (
+    SaleID INT IDENTITY(1,1) PRIMARY KEY,
+    RouteCode INT FOREIGN KEY REFERENCES Routes(RouteCode) ON DELETE CASCADE,
+    PurposeOfTravel NVARCHAR(100), -- отдых, экскурсия, лечение и др.
+    VoucherPrice MONEY NOT NULL,
+    VouchersSoldQuantity INT NOT NULL,
+    SaleDate DATE NOT NULL
+);
+GO`,
+
+
+            25: `CREATE DATABASE PolyclinicDB;
+GO
+USE PolyclinicDB;
+GO
+
+-- 1. Врачи
+CREATE TABLE Врачи (
+    Код_врача INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_врача NVARCHAR(150) NOT NULL,
+    Специальность NVARCHAR(100) NOT NULL,
+    Категория NVARCHAR(50) NOT NULL -- 1-я, 2-я, 3-я
+);
+
+-- 2. Пациенты
+CREATE TABLE Пациенты (
+    Номер_медкарты INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_пациента NVARCHAR(150) NOT NULL,
+    Дата_рождения DATE,
+    Адрес NVARCHAR(255),
+    Пол NVARCHAR(10),
+    Скидка_на_обслуживание DECIMAL(5,2) DEFAULT 0.00
+);
+
+-- 3. Диагнозы
+CREATE TABLE Диагнозы (
+    Код_диагноза INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_диагноза NVARCHAR(150) NOT NULL
+);
+
+-- 4. Ежедневный прием пациентов
+CREATE TABLE Прием_пациентов (
+    Номер_талона INT IDENTITY(1,1) PRIMARY KEY,
+    Код_врача INT FOREIGN KEY REFERENCES Врачи(Код_врача),
+    Номер_медкарты INT FOREIGN KEY REFERENCES Пациенты(Номер_медкарты) ON DELETE CASCADE,
+    Дата_визита DATE NOT NULL,
+    Цель_посещения NVARCHAR(100), -- консультация, обследование...
+    Стоимость_визита MONEY NOT NULL,
+    Код_диагноза INT FOREIGN KEY REFERENCES Диагнозы(Код_диагноза)
+);
+GO`,
+
+
+            26: `CREATE DATABASE PharmacyWarehouseDB;
+GO
+USE PharmacyWarehouseDB;
+GO
+
+-- 1. Medicines (Лекарства)
+CREATE TABLE Medicines (
+    MedicineCode INT IDENTITY(1,1) PRIMARY KEY,
+    MedicineName NVARCHAR(150) NOT NULL,
+    Manufacturer NVARCHAR(150),
+    Price MONEY NOT NULL
+);
+
+-- 2. Pharmacies (Аптеки)
+CREATE TABLE Pharmacies (
+    PharmacyNumber INT IDENTITY(1,1) PRIMARY KEY,
+    PharmacyName NVARCHAR(150) NOT NULL,
+    Address NVARCHAR(255),
+    Phone NVARCHAR(20)
+);
+
+-- 3. Requests (Заявки)
+CREATE TABLE Requests (
+    RequestNumber INT IDENTITY(1,1) PRIMARY KEY,
+    RequestDate DATE NOT NULL,
+    PharmacyNumber INT FOREIGN KEY REFERENCES Pharmacies(PharmacyNumber) ON DELETE CASCADE,
+    ExecutionDate DATE
+);
+
+-- 4. Purchases (Закупки лекарственных препаратов)
+CREATE TABLE Purchases (
+    PurchaseID INT IDENTITY(1,1) PRIMARY KEY,
+    RequestNumber INT FOREIGN KEY REFERENCES Requests(RequestNumber) ON DELETE CASCADE,
+    MedicineCode INT FOREIGN KEY REFERENCES Medicines(MedicineCode),
+    Quantity INT NOT NULL
+);
+GO`,
+
+
+            27: `CREATE DATABASE DiplomaProjectDB;
+GO
+USE DiplomaProjectDB;
+GO
+
+-- 1. Преподаватели
+CREATE TABLE Преподаватели (
+    Код_преподавателя INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_преподавателя NVARCHAR(150) NOT NULL,
+    Степень NVARCHAR(100),
+    Звание NVARCHAR(100),
+    Кафедра NVARCHAR(150),
+    Телефон NVARCHAR(20),
+    Email NVARCHAR(100)
+);
+
+-- 2. Темы
+CREATE TABLE Темы (
+    Код_темы INT IDENTITY(1,1) PRIMARY KEY,
+    Код_преподавателя INT FOREIGN KEY REFERENCES Преподаватели(Код_преподавателя) ON DELETE CASCADE,
+    Тема_дипломной_работы NVARCHAR(255) NOT NULL
+);
+
+-- 3. Студенты
+CREATE TABLE Студенты (
+    Номер_зачетной_книжки INT IDENTITY(1,1) PRIMARY KEY,
+    ФИО_студента NVARCHAR(150) NOT NULL,
+    Факультет NVARCHAR(100),
+    Группа NVARCHAR(50)
+);
+
+-- 4. Отметки
+CREATE TABLE Отметки (
+    Номер_зачетной_книжки INT PRIMARY KEY FOREIGN KEY REFERENCES Студенты(Номер_зачетной_книжки) ON DELETE CASCADE,
+    Оценка_госэкзамен INT CHECK (Оценка_госэкзамен BETWEEN 1 AND 5),
+    Оценка_защита INT CHECK (Оценка_защита BETWEEN 1 AND 5)
+);
+GO`,
+
+
+            28: `CREATE DATABASE GasStationsDB;
+GO
+USE GasStationsDB;
+GO
+
+-- 1. Clients (Клиенты)
+CREATE TABLE Clients (
+    ClientCardAccount INT IDENTITY(1,1) PRIMARY KEY,
+    ClientFullName NVARCHAR(150) NOT NULL,
+    Address NVARCHAR(255),
+    Phone NVARCHAR(20)
+);
+
+-- 2. Companies (Фирмы)
+CREATE TABLE Companies (
+    CompanyID INT IDENTITY(1,1) PRIMARY KEY,
+    CompanyName NVARCHAR(150) NOT NULL,
+    LegalAddress NVARCHAR(255),
+    Phone NVARCHAR(20)
+);
+
+-- 3. GasStations (Автозаправки)
+CREATE TABLE GasStations (
+    GasStationCode INT IDENTITY(1,1) PRIMARY KEY,
+    CompanyID INT FOREIGN KEY REFERENCES Companies(CompanyID) ON DELETE CASCADE,
+    GasStationAddress NVARCHAR(255)
+);
+
+-- 4. Fuel (Топливо)
+CREATE TABLE Fuel (
+    FuelCode INT IDENTITY(1,1) PRIMARY KEY,
+    FuelType NVARCHAR(50) NOT NULL, -- бензин-95, дизель и др.
+    UnitOfMeasure NVARCHAR(20) DEFAULT 'литр',
+    Price MONEY NOT NULL
+);
+
+-- 5. DailySales (Ежедневная продажа топлива клиентам)
+CREATE TABLE DailySales (
+    SaleID INT IDENTITY(1,1) PRIMARY KEY,
+    SaleDate DATE NOT NULL,
+    ClientCardAccount INT FOREIGN KEY REFERENCES Clients(ClientCardAccount),
+    GasStationCode INT FOREIGN KEY REFERENCES GasStations(GasStationCode),
+    FuelCode INT FOREIGN KEY REFERENCES Fuel(FuelCode),
+    Quantity DECIMAL(10,2) NOT NULL -- объем в литрах / натуре
+);
+GO`,
+
+
+            29: `CREATE DATABASE CosmeticsProductionDB;
+GO
+USE CosmeticsProductionDB;
+GO
+
+-- 1. Бренды
+CREATE TABLE Бренды (
+    Код_бренда INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_бренда NVARCHAR(100) NOT NULL
+);
+
+-- 2. Товары
+CREATE TABLE Товары (
+    Код_товара INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_товара NVARCHAR(150) NOT NULL,
+    Код_бренда INT FOREIGN KEY REFERENCES Бренды(Код_бренда) ON DELETE SET NULL,
+    Единица_измерения NVARCHAR(20),
+    Цена MONEY NOT NULL
+);
+
+-- 3. Предприятия
+CREATE TABLE Предприятия (
+    Код_предприятия INT IDENTITY(1,1) PRIMARY KEY,
+    Наименование_предприятия NVARCHAR(150) NOT NULL,
+    Адрес NVARCHAR(255),
+    Телефон NVARCHAR(20)
+);
+
+-- 4. Заказы
+CREATE TABLE Заказы (
+    Код_заказа INT IDENTITY(1,1) PRIMARY KEY,
+    Код_предприятия INT FOREIGN KEY REFERENCES Предприятия(Код_предприятия) ON DELETE CASCADE,
+    Код_товара INT FOREIGN KEY REFERENCES Товары(Код_товара),
+    Количество_товара_в_заказе INT NOT NULL,
+    Дата_заказа DATE NOT NULL,
+    Дата_к_исполнению DATE NOT NULL
+);
+
+-- 5. Доставки
+CREATE TABLE Доставки (
+    Код_доставки INT IDENTITY(1,1) PRIMARY KEY,
+    Код_заказа INT FOREIGN KEY REFERENCES Заказы(Код_заказа) ON DELETE CASCADE,
+    Дата_фактического_исполнения DATE NOT NULL,
+    Количество_товара_в_доставке INT NOT NULL
+);
+GO`,
+
+
+            30: `CREATE DATABASE MinskZelenStroyDB;
+GO
+USE MinskZelenStroyDB;
+GO
+
+-- 1. Suppliers (Поставщики рассады цветов)
+CREATE TABLE Suppliers (
+    SupplierCode INT IDENTITY(1,1) PRIMARY KEY,
+    SupplierName NVARCHAR(150) NOT NULL,
+    SupplierAddress NVARCHAR(255)
+);
+
+-- 2. Flowers (Цветы)
+CREATE TABLE Flowers (
+    FlowerCode INT IDENTITY(1,1) PRIMARY KEY,
+    FlowerName NVARCHAR(150) NOT NULL,
+    SupplierCode INT FOREIGN KEY REFERENCES Suppliers(SupplierCode) ON DELETE CASCADE,
+    SeedlingPrice MONEY NOT NULL
+);
+
+-- 3. Customers (Заказчики)
+CREATE TABLE Customers (
+    CustomerCode INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerName NVARCHAR(150) NOT NULL,
+    CustomerAddress NVARCHAR(255),
+    Phone NVARCHAR(20)
+);
+
+-- 4. Contracts (Договора)
+CREATE TABLE Contracts (
+    ContractNumber INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerCode INT FOREIGN KEY REFERENCES Customers(CustomerCode) ON DELETE CASCADE,
+    ContractDate DATE NOT NULL,
+    ExecutionDate DATE NOT NULL
+);
+
+-- 5. Orders (Заказы о цветах, используемых для выполнения договора)
+CREATE TABLE Orders (
+    OrderID INT IDENTITY(1,1) PRIMARY KEY,
+    ContractNumber INT FOREIGN KEY REFERENCES Contracts(ContractNumber) ON DELETE CASCADE,
+    FlowerCode INT FOREIGN KEY REFERENCES Flowers(FlowerCode),
+    SeedlingQuantity INT NOT NULL
+);
+GO`
+        };
+
+        // ==========================================
+        // ЛОГИКА РАБОТЫ (ЭТО НЕ ТРОГАЙ)
+        // ==========================================
+        
+        // Поиск по нажатию Enter в поле ввода
+        document.getElementById("ticketInput").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                getTicketCode();
+            }
+        });
+
+        function getTicketCode() {
+            const ticketNumber = document.getElementById('ticketInput').value;
+            const resultContainer = document.getElementById('result-container');
+            const codeOutput = document.getElementById('codeOutput');
+            const copyBtn = document.getElementById('copyBtn');
+
+            // Сброс текста кнопки копирования
+            copyBtn.innerText = "Копировать";
+            copyBtn.style.backgroundColor = "#2ecc71";
+
+            if (ticketNumber === "" || ticketNumber < 1 || ticketNumber > 30) {
+                alert("Пожалуйста, введите корректный номер билета от 1 до 30.");
+                resultContainer.style.display = "none";
+                return;
+            }
+
+            if (ticketsData[ticketNumber]) {
+                // Если код для билета найден, вставляем его как текст (сохраняя структуру)
+                codeOutput.textContent = ticketsData[ticketNumber];
+                resultContainer.style.display = "block";
+            } else {
+                alert(`Код для билета ${ticketNumber} еще не добавлен в базу.`);
+                resultContainer.style.display = "none";
+            }
+        }
+
+        function copyCode() {
+            const codeText = document.getElementById('codeOutput').textContent;
+            const copyBtn = document.getElementById('copyBtn');
+
+            // API буфера обмена
+            navigator.clipboard.writeText(codeText).then(() => {
+                copyBtn.innerText = "Скопировано!";
+                copyBtn.style.backgroundColor = "#27ae60"; // Темно-зеленый цвет успеха
+                
+                // Возвращаем текст кнопки через 2 секунды
+                setTimeout(() => {
+                    copyBtn.innerText = "Копировать";
+                    copyBtn.style.backgroundColor = "#2ecc71";
+                }, 2000);
+            }).catch(err => {
+                console.error('Ошибка при копировании: ', err);
+                alert('Не удалось скопировать текст. Попробуйте выделить и скопировать вручную.');
+            });
+        }
+    </script>
+</body>
+</html>
